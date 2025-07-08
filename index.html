@@ -80,8 +80,8 @@
     }
 
     button {
-      padding: 1vh 2vw;
-      font-size: 1.5vw;
+      padding: 5vh 10vw;
+      font-size: 6vw;
       font-weight: bold;
       background: #fff;
       border: 0.3vh solid #333;
@@ -108,7 +108,7 @@
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      font-size: 2em;
+      font-size: 5em;
       z-index: 999;
     }
 
@@ -226,7 +226,7 @@
         if (isInBoat) {
           const offset = boatSide === "left" ? boatLeft : boatRight;
           const seat = boatOccupants.indexOf(id);
-          char.style.left = `${offset + (seat === 0 ? 5 : 10)}vw`;
+          char.style.left = `${offset + (seat === 0 ? 3 : 7)}vw`;
           char.style.bottom = "28vh";
         } else {
           const pos = defaultPositions[id];
