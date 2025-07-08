@@ -179,7 +179,7 @@
     let boatOccupants = [];
     let boatSide = "left"; // 'left' or 'right'
     const boatLeft = 20;
-    const boatRight = 78;
+    const boatRight = 68;
 
     const characterState = {};
     const defaultPositions = {
@@ -216,7 +216,7 @@
         if (isInBoat) {
           const offset = boatSide === "left" ? boatLeft : boatRight;
           const seat = boatOccupants.indexOf(id);
-          char.style.left = `${offset + (seat === 0 ? 5 : 18)}vw`;
+          char.style.left = `${offset + (seat === 0 ? 5 : 12)}vw`;
           char.style.bottom = "28vh";
         } else {
           const pos = defaultPositions[id];
