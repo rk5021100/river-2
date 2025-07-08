@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      background: #87CEEB;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      font-family: sans-serif;
+    }
+
+    .scene { position: relative; width: 100vw; height: 100vh; }
+
+    .river {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 25vh;
+      background: #1E90FF;
+      z-index: 1;
+    }
+
+    .island {
+      position: absolute;
+      bottom: 0;
+      width: 50vh;
+      height: 30vh;
+      background: #228B22;
+      border-radius: 15px;
+      z-index: 2;
+    }
+
+    .island.left { left: -15vh; }
+    .island.right { right: -1vw; }
+
+    .character {
+      position: absolute;
+      z-index: 5;
+      transition: left 1s ease, bottom 1s ease;
+      cursor: pointer;
+    }
+
+    .missionary { width: 15vh; }
+    .cannibal { width: 15vh; }
+
+    .boat {
+      position: absolute;
+      width: 45vh;
+      bottom: 15vh;
+      z-index: 4;
+      transition: left 1s ease;
+      pointer-events: none;
+    }
+
+    .button-container {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    @keyframes jump {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-30px); }
+      60% { transform: translateY(0); }
+      100% { transform: translateY(0); }
+    }
+
+    .jump { animation: jump 0.5s ease; }
+    .hidden { display: none !important; }
+
+    .attack-text {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      font-weight: bold;
+      color: crimson;
+      background: rgba(255,255,255,0.95);
+      padding: 20px 30px;
+      border-radius: 15px;
+      z-index: 9999;
+      display: none;
+    }
+
+    .game-over-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      font-size: 2em;
+      z-index: 9998;
+    }
+
+    .rules {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 15px;
+      border-radius: 10px;
+      color: #333;
+      font-size: 0.9em;
+      max-width: 45vw;
+      text-align: left;
+      z-index: 5;
+      line-height: 1.4em;
+    }
+
+    @media (orientation: portrait) {
+      body::before {
+        content: "Please rotate your device to landscape mode.";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        color: #333;
+        font-size: 1.5em;
+        text-align: center;
+        z-index: 999;
+      }
+      .scene { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="rules">
+      <strong>Rules:</strong><br>
+      - Boat can carry max 2 people<br>
+      - Never leave more Cannibals than Missionaries on any side<br>
+      - Goal: Bring everyone to the right side safely
+    </div>
+
+    <div class="button-container">
+      <button onclick="moveBoat()">Move</button>
+      <button onclick="resetGame()">Reset</button>
+    </div>
+
+    <div id="attackText" class="attack-text"></div>
+    <div id="gameOverScreen" class="game-over-screen">
+      <div id="gameOverMessage"></div>
+      <button onclick="resetGame()">Restart</button>
+    </div>
+
+    <!-- Characters -->
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m1" alt="Missionary">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m2" alt="Missionary">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m3" alt="Missionary">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c1" alt="Cannibal">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c2" alt="Cannibal">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c3" alt="Cannibal">
+
+    <!-- Boat -->
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/boat.png" class="boat" id="boat" alt="Boat">
+
+    <div class="island left"></div>
+    <div class="island right"></div>
+    <div class="river"></div>
+  </div>
+
+  <script>
+    
+  const boat = document.getElementById("boat");
+  const characters = Array.from(document.querySelectorAll(".character"));
+  const attackText = document.getElementById("attackText");
+  const gameOverScreen = document.getElementById("gameOverScreen");
+  const gameOverMessage = document.getElementById("gameOverMessage");
+
+  let boatSide = "left";
+  let onboard = [];
+  let state = {};
+  let gameOver = false;
+
+  const boatPositions = { left: 26, right: 70 };
+
+  characters.forEach(char => {
+    const id = char.id;
+    state[id] = "left";
+
+    char.addEventListener("click", () => {
+      if (gameOver) return;
+      if (state[id] === "boat") {
+        state[id] = boatSide;
+        onboard = onboard.filter(x => x !== id);
+      } else if (state[id] === boatSide && onboard.length < 2) {
+        state[id] = "boat";
+        onboard.push(id);
+      } else return;
+
+      char.classList.remove("jump");
+      void char.offsetWidth;
+      char.classList.add("jump");
+
+      updatePositions();
+    });
+  });
+
+  function updatePositions() {
+    boat.style.left = `${boatPositions[boatSide]}vh`;
+
+    characters.forEach((char) => {
+      const id = char.id;
+      const isMissionary = id.startsWith("m");
+
+      if (state[id] === "boat") {
+        const offset = 5 + onboard.indexOf(id) * 10;
+        char.style.left = `${boatPositions[boatSide] + offset}vh`;
+        char.style.bottom = `27vh`;
+      } else if (state[id] === "left") {
+        char.style.left = `${1 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
+        char.style.bottom = isMissionary ? "25vh" : "12vh";
+      } else if (state[id] === "right") {
+        char.style.left = `${70 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
+        char.style.bottom = isMissionary ? "25vh" : "12vh";
+      }
+    });
+  }
+
+  function moveBoat() {
+    if (gameOver || onboard.length === 0) return;
+
+    boatSide = boatSide === "left" ? "right" : "left";
+    updatePositions();
+
+    // Auto-unload
+    setTimeout(() => {
+      onboard.forEach(id => {
+        state[id] = boatSide;
+      });
+      onboard = [];
+      updatePositions();
+      setTimeout(checkGameState, 800);
+    }, 1000);
+  }
+
+  function checkGameState() {
+    const sideCount = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
+    const missionariesOnSide = { left: [], right: [] };
+    const cannibalsOnSide = { left: [], right: [] };
+
+    Object.keys(state).forEach(id => {
+      const side = state[id];
+      if (side === "boat") return;
+
+      if (id.startsWith("m")) {
+        sideCount[side].m++;
+        missionariesOnSide[side].push(document.getElementById(id));
+      } else if (id.startsWith("c")) {
+        sideCount[side].c++;
+        cannibalsOnSide[side].push(document.getElementById(id));
+      }
+    });
+
+    onboard.forEach(id => {
+      const side = boatSide;
+      if (id.startsWith("m")) sideCount[side].m++;
+      else if (id.startsWith("c")) sideCount[side].c++;
+    });
+
+    // Check each side
+    ["left", "right"].forEach(side => {
+      if (sideCount[side].m > 0 && sideCount[side].c > sideCount[side].m) {
+        // Animate attack before game over
+        const m = missionariesOnSide[side][0];
+        const c = cannibalsOnSide[side][0];
+        if (m && c) {
+          c.style.transition = "left 0.5s ease, bottom 0.5s ease";
+          c.style.left = m.style.left;
+          c.style.bottom = m.style.bottom;
+          m.style.opacity = "0";
+        }
+
+        setTimeout(() => {
+          showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
+        }, 1000);
+      }
+    });
+
+    const allRight = characters.every(char => state[char.id] === "right");
+    if (allRight) {
+      gameOver = true;
+      gameOverMessage.textContent = "🎉 Congratulations! You Won!";
+      gameOverScreen.style.display = "flex";
+    }
+  }
+
+  function showGameOver(message) {
+    gameOver = true;
+    attackText.textContent = message;
+    attackText.style.display = "block";
+    setTimeout(() => {
+      attackText.style.display = "none";
+      gameOverMessage.textContent = "💀 Game Over";
+      gameOverScreen.style.display = "flex";
+    }, 1500);
+  }
+
+  function resetGame() {
+    characters.forEach(char => {
+      state[char.id] = "left";
+      char.style.opacity = "1";
+    });
+    onboard = [];
+    boatSide = "left";
+    gameOver = false;
+    attackText.style.display = "none";
+    gameOverScreen.style.display = "none";
+    gameOverMessage.textContent = "";
+    updatePositions();
+  }
+
+  updatePositions();
+  </script>
+</body>
+</html>
