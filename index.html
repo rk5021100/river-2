@@ -1,28 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100vw;
-      height: 100vh;
-      background: #87CEEB;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
+      background: #87CEEB;
       font-family: sans-serif;
+      display: flex; justify-content: center; align-items: flex-end;
     }
 
-    .scene { position: relative; width: 100vw; height: 100vh; }
+    .scene { position: relative; width: 100%; height: 100%; }
 
     .river {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 25vh;
+      bottom: 0; left: 0;
+      width: 100%; height: 25vh;
       background: #1E90FF;
       z-index: 1;
     }
@@ -30,24 +25,22 @@
     .island {
       position: absolute;
       bottom: 0;
-      width: 50vh;
-      height: 30vh;
+      width: 45vh; height: 30vh;
       background: #228B22;
-      border-radius: 15px;
+      border-radius: 10px;
       z-index: 2;
     }
 
-    .island.left { left: -15vh; }
-    .island.right { right: -1vw; }
+    .island.left { left: 0; }
+    .island.right { right: 0; }
 
     .character {
       position: absolute;
-      z-index: 5;
+      width: 14vh;
       transition: left 1s ease, bottom 1s ease;
       cursor: pointer;
+      z-index: 5;
     }
-
-    .missionary, .cannibal { width: 15vh; }
 
     .boat {
       position: absolute;
@@ -58,125 +51,72 @@
       pointer-events: none;
     }
 
-    .button-container {
+    .buttons {
       position: absolute;
       top: 10px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 10;
       display: flex;
       gap: 10px;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 10px 15px;
       font-size: 16px;
     }
 
-    @keyframes jump {
-      0% { transform: translateY(0); }
-      30% { transform: translateY(-30px); }
-      60% { transform: translateY(0); }
-      100% { transform: translateY(0); }
-    }
-
-    .jump { animation: jump 0.5s ease; }
     .hidden { display: none !important; }
 
-    .attack-text {
+    .text-overlay {
       position: absolute;
       top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
       font-size: 2em;
-      font-weight: bold;
       color: crimson;
-      background: rgba(255,255,255,0.95);
-      padding: 20px 30px;
-      border-radius: 15px;
-      z-index: 9999;
       display: none;
+      z-index: 9999;
     }
 
     .game-over-screen {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
       display: none;
       justify-content: center;
       align-items: center;
       flex-direction: column;
+      z-index: 9998;
       color: white;
       font-size: 2em;
-      z-index: 9998;
-    }
-
-    .rules {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 10px 15px;
-      border-radius: 10px;
-      color: #333;
-      font-size: 0.9em;
-      max-width: 45vw;
-      text-align: left;
-      z-index: 5;
-      line-height: 1.4em;
-    }
-
-    @media (orientation: portrait) {
-      body::before {
-        content: "Please rotate your device to landscape mode.";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(255, 255, 255, 0.8);
-        padding: 20px;
-        border-radius: 10px;
-        color: #333;
-        font-size: 1.5em;
-        text-align: center;
-        z-index: 999;
-      }
-      .scene { display: none; }
     }
   </style>
 </head>
 <body>
   <div class="scene">
-    <div class="rules">
-      <strong>Rules:</strong><br>
-      - Boat can carry max 2 people<br>
-      - Never leave more Cannibals than Missionaries on any side<br>
-      - Goal: Bring everyone to the right side safely
-    </div>
-
-    <div class="button-container">
+    <div class="buttons">
       <button onclick="moveBoat()">Move</button>
       <button onclick="resetGame()">Reset</button>
     </div>
 
-    <div id="attackText" class="attack-text"></div>
+    <div id="overlay" class="text-overlay"></div>
     <div id="gameOverScreen" class="game-over-screen">
       <div id="gameOverMessage"></div>
       <button onclick="resetGame()">Restart</button>
     </div>
 
-    <!-- Characters -->
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m1">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m2">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m3">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c1">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c2">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c3">
-
-    <!-- Boat -->
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/boat.png" class="boat" id="boat">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/boat.png" class="boat" id="boat" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character" id="m1" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character" id="m2" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character" id="m3" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character" id="c1" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character" id="c2" />
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character" id="c3" />
 
     <div class="island left"></div>
     <div class="island right"></div>
@@ -185,127 +125,117 @@
 
   <script>
     const boat = document.getElementById("boat");
-    const characters = Array.from(document.querySelectorAll(".character"));
-    const attackText = document.getElementById("attackText");
+    const overlay = document.getElementById("overlay");
     const gameOverScreen = document.getElementById("gameOverScreen");
     const gameOverMessage = document.getElementById("gameOverMessage");
 
+    const characters = Array.from(document.querySelectorAll(".character"));
+    const onboard = [];
     let boatSide = "left";
-    let onboard = [];
-    let state = {};
     let gameOver = false;
 
-    const boatPositions = { left: 26, right: 92 };
-    const characterIslandPositions = { left: 1, right: 72 };
+    const boatPositions = { left: "26vw", right: "70vw" };
+    const onboardOffsets = [5, 25]; // distance from boat edge
+    const state = {};
 
-    characters.forEach(char => {
-      const id = char.id;
+    // Initial positions
+    characters.forEach((el, i) => {
+      const id = el.id;
       state[id] = "left";
-
-      char.addEventListener("click", () => {
+      el.addEventListener("click", () => {
         if (gameOver) return;
+
         if (state[id] === "boat") {
           state[id] = boatSide;
-          onboard = onboard.filter(x => x !== id);
+          onboard.splice(onboard.indexOf(id), 1);
         } else if (state[id] === boatSide && onboard.length < 2) {
           state[id] = "boat";
           onboard.push(id);
-        } else return;
-
-        char.classList.remove("jump");
-        void char.offsetWidth;
-        char.classList.add("jump");
-
+        }
         updatePositions();
       });
     });
 
     function updatePositions() {
-      boat.style.left = `${boatPositions[boatSide]}vh`;
+      boat.style.left = boatPositions[boatSide];
 
-      characters.forEach(char => {
-        const id = char.id;
-        const isMissionary = id.startsWith("m");
-        const offset = (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5;
-
+      characters.forEach((el) => {
+        const id = el.id;
         if (state[id] === "boat") {
-          const boatOffset = 5 + onboard.indexOf(id) * 10;
-          char.style.left = `${boatPositions[boatSide] + boatOffset}vh`;
-          char.style.bottom = "27vh";
+          const idx = onboard.indexOf(id);
+          el.style.left = `calc(${boatPositions[boatSide]} + ${onboardOffsets[idx]}vw)`;
+          el.style.bottom = "27vh";
         } else if (state[id] === "left") {
-          char.style.left = `${characterIslandPositions.left + offset}vw`;
-          char.style.bottom = isMissionary ? "25vh" : "12vh";
+          el.style.left = `${5 + (["m1", "m2", "m3", "c1", "c2", "c3"].indexOf(id) * 4)}vw`;
+          el.style.bottom = id.startsWith("m") ? "25vh" : "13vh";
         } else if (state[id] === "right") {
-          char.style.left = `${characterIslandPositions.right + offset}vw`;
-          char.style.bottom = isMissionary ? "25vh" : "12vh";
+          el.style.left = `${70 + (["m1", "m2", "m3", "c1", "c2", "c3"].indexOf(id) * 4)}vw`;
+          el.style.bottom = id.startsWith("m") ? "25vh" : "13vh";
         }
       });
     }
 
     function moveBoat() {
       if (gameOver || onboard.length === 0) return;
-
       boatSide = boatSide === "left" ? "right" : "left";
-      updatePositions();
 
+      // Unload automatically after boat moves
       setTimeout(() => {
         onboard.forEach(id => state[id] = boatSide);
-        onboard = [];
+        onboard.length = 0;
         updatePositions();
         setTimeout(checkGameState, 800);
       }, 1000);
+
+      updatePositions();
     }
 
     function checkGameState() {
-      const sideCount = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
-      characters.forEach(char => {
-        const id = char.id;
+      const count = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
+
+      Object.keys(state).forEach(id => {
         const side = state[id];
         if (side === "boat") return;
-        if (id.startsWith("m")) sideCount[side].m++;
-        else sideCount[side].c++;
+        if (id.startsWith("m")) count[side].m++;
+        if (id.startsWith("c")) count[side].c++;
       });
 
       onboard.forEach(id => {
         const side = boatSide;
-        if (id.startsWith("m")) sideCount[side].m++;
-        else sideCount[side].c++;
+        if (id.startsWith("m")) count[side].m++;
+        if (id.startsWith("c")) count[side].c++;
       });
 
       ["left", "right"].forEach(side => {
-        if (sideCount[side].m > 0 && sideCount[side].c > sideCount[side].m) {
-          showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
+        if (count[side].m > 0 && count[side].c > count[side].m) {
+          overlay.textContent = `💀 Cannibals ate the Missionaries on the ${side} side!`;
+          overlay.style.display = "block";
+          gameOver = true;
+          setTimeout(() => {
+            overlay.style.display = "none";
+            gameOverScreen.style.display = "flex";
+            gameOverMessage.textContent = "💀 Game Over";
+          }, 1500);
         }
       });
 
-      const allRight = characters.every(char => state[char.id] === "right");
+      const allRight = characters.every(c => state[c.id] === "right");
       if (allRight) {
         gameOver = true;
-        gameOverMessage.textContent = "🎉 Congratulations! You Won!";
         gameOverScreen.style.display = "flex";
+        gameOverMessage.textContent = "🎉 Congratulations! You Win!";
       }
     }
 
-    function showGameOver(message) {
-      gameOver = true;
-      attackText.textContent = message;
-      attackText.style.display = "block";
-      setTimeout(() => {
-        attackText.style.display = "none";
-        gameOverMessage.textContent = "💀 Game Over";
-        gameOverScreen.style.display = "flex";
-      }, 1500);
-    }
-
     function resetGame() {
-      characters.forEach(char => {
-        state[char.id] = "left";
-        char.style.opacity = "1";
+      characters.forEach(c => {
+        state[c.id] = "left";
+        c.style.opacity = "1";
       });
-      onboard = [];
+      onboard.length = 0;
       boatSide = "left";
       gameOver = false;
-      attackText.style.display = "none";
+      overlay.style.display = "none";
       gameOverScreen.style.display = "none";
       gameOverMessage.textContent = "";
       updatePositions();
