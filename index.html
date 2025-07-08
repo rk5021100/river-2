@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +39,7 @@
     }
 
     .island.left { left: -15vh; }
-    .island.right { right: -1vw; }
+    .island.right { right: 0; }  /* Updated from -1vw */
 
     .character {
       position: absolute;
@@ -194,8 +195,9 @@
     let onboard = [];
     let state = {};
     let gameOver = false;
+    let isMoving = false;
 
-    const boatPositions = { left: 26, right: 82 };
+    const boatPositions = { left: 26, right: 88 }; // ⬅️ Adjusted right position
     const characterIslandPositions = { left: 1, right: 72 };
 
     characters.forEach(char => {
@@ -203,7 +205,7 @@
       state[id] = "left";
 
       char.addEventListener("click", () => {
-        if (gameOver) return;
+        if (gameOver || isMoving) return;
         if (state[id] === "boat") {
           state[id] = boatSide;
           onboard = onboard.filter(x => x !== id);
@@ -243,7 +245,8 @@
     }
 
     function moveBoat() {
-      if (gameOver || onboard.length === 0) return;
+      if (gameOver || onboard.length === 0 || isMoving) return;
+      isMoving = true;
 
       boatSide = boatSide === "left" ? "right" : "left";
       updatePositions();
@@ -252,7 +255,10 @@
         onboard.forEach(id => state[id] = boatSide);
         onboard = [];
         updatePositions();
-        setTimeout(checkGameState, 800);
+        setTimeout(() => {
+          checkGameState();
+          isMoving = false;
+        }, 800);
       }, 1000);
     }
 
@@ -305,6 +311,7 @@
       onboard = [];
       boatSide = "left";
       gameOver = false;
+      isMoving = false;
       attackText.style.display = "none";
       gameOverScreen.style.display = "none";
       gameOverMessage.textContent = "";
