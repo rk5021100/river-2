@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,6 +55,7 @@
     .character.hidden {
       opacity: 0;
       pointer-events: none;
+      transition: opacity 1s ease;
     }
 
     .boat {
@@ -76,17 +76,24 @@
       transform: translateX(-50%);
       z-index: 10;
       display: flex;
-      gap: 20px;
+      gap: 3vw;
     }
 
     button {
-      padding: 16px 32px;
-      font-size: 20px;
+      padding: 1vh 2vw;
+      font-size: 1.5vw;
       font-weight: bold;
       background: #fff;
-      border: 2px solid #333;
-      border-radius: 10px;
+      border: 0.3vh solid #333;
+      border-radius: 1vh;
       cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      button {
+        font-size: 3.5vw;
+        padding: 1.5vh 4vw;
+      }
     }
 
     .overlay {
@@ -163,7 +170,7 @@
     <div class="island right"></div>
     <div class="river"></div>
 
-    <!-- Overlay -->
+    <!-- Win/Lose Screen -->
     <div id="overlay" class="overlay">
       <div id="message"></div>
       <button onclick="resetGame()">Restart</button>
@@ -177,9 +184,9 @@
     const message = document.getElementById("message");
 
     let boatOccupants = [];
-    let boatSide = "left"; // 'left' or 'right'
+    let boatSide = "left";
     const boatLeft = 20;
-    const boatRight = 64;
+    const boatRight = 70;
 
     const characterState = {};
     const defaultPositions = {
@@ -189,6 +196,8 @@
 
     characters.forEach(char => {
       const id = char.id;
+      characterState[id] = "left";
+
       char.addEventListener("click", () => {
         if (overlay.style.display === "flex") return;
 
@@ -211,12 +220,13 @@
         const id = char.id;
         const state = characterState[id];
         const isInBoat = state === "boat";
+
         char.style.zIndex = isInBoat ? "3" : "5";
 
         if (isInBoat) {
           const offset = boatSide === "left" ? boatLeft : boatRight;
           const seat = boatOccupants.indexOf(id);
-          char.style.left = `${offset + (seat === 0 ? 5 : 10)}vw`;
+          char.style.left = `${offset + (seat === 0 ? 5 : 18)}vw`;
           char.style.bottom = "28vh";
         } else {
           const pos = defaultPositions[id];
@@ -282,16 +292,13 @@
       boatSide = "left";
       boatOccupants = [];
       characters.forEach(c => {
-        const id = c.id;
         c.classList.remove("hidden");
-        characterState[id] = "left";
+        characterState[c.id] = "left";
       });
       document.body.classList.remove("eaten");
       updatePositions();
     }
 
-    // Initial setup
-    characters.forEach(c => characterState[c.id] = "left");
     updatePositions();
   </script>
 </body>
