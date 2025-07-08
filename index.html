@@ -197,7 +197,7 @@
   let state = {};
   let gameOver = false;
 
-  const boatPositions = { left: 26, right: 70 };
+  const boatPositions = { left: 26, right: 85 };
 
   characters.forEach(char => {
     const id = char.id;
@@ -236,7 +236,7 @@
         char.style.left = `${1 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
         char.style.bottom = isMissionary ? "25vh" : "12vh";
       } else if (state[id] === "right") {
-        char.style.left = `${70 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
+        char.style.left = `${85 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
         char.style.bottom = isMissionary ? "25vh" : "12vh";
       }
     });
