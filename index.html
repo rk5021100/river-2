@@ -185,157 +185,155 @@
   </div>
 
   <script>
-    
-  const boat = document.getElementById("boat");
-  const characters = Array.from(document.querySelectorAll(".character"));
-  const attackText = document.getElementById("attackText");
-  const gameOverScreen = document.getElementById("gameOverScreen");
-  const gameOverMessage = document.getElementById("gameOverMessage");
+    const boat = document.getElementById("boat");
+    const characters = Array.from(document.querySelectorAll(".character"));
+    const attackText = document.getElementById("attackText");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const gameOverMessage = document.getElementById("gameOverMessage");
 
-  let boatSide = "left";
-  let onboard = [];
-  let state = {};
-  let gameOver = false;
+    let boatSide = "left";
+    let onboard = [];
+    let state = {};
+    let gameOver = false;
 
-  const boatPositions = { left: 26, right: 95 };
+    const boatPositions = { left: 26, right: 80 };
+    const characterIslandPositions = { left: 1, right: 65 };
 
-  characters.forEach(char => {
-    const id = char.id;
-    state[id] = "left";
-
-    char.addEventListener("click", () => {
-      if (gameOver) return;
-      if (state[id] === "boat") {
-        state[id] = boatSide;
-        onboard = onboard.filter(x => x !== id);
-      } else if (state[id] === boatSide && onboard.length < 2) {
-        state[id] = "boat";
-        onboard.push(id);
-      } else return;
-
-      char.classList.remove("jump");
-      void char.offsetWidth;
-      char.classList.add("jump");
-
-      updatePositions();
-    });
-  });
-
-  function updatePositions() {
-    boat.style.left = `${boatPositions[boatSide]}vh`;
-
-    characters.forEach((char) => {
+    characters.forEach(char => {
       const id = char.id;
-      const isMissionary = id.startsWith("m");
+      state[id] = "left";
 
-      if (state[id] === "boat") {
-        const offset = 5 + onboard.indexOf(id) * 10;
-        char.style.left = `${boatPositions[boatSide] + offset}vh`;
-        char.style.bottom = `27vh`;
-      } else if (state[id] === "left") {
-        char.style.left = `${1 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
-        char.style.bottom = isMissionary ? "25vh" : "12vh";
-      } else if (state[id] === "right") {
-        char.style.left = `${85 + (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5}vw`;
-        char.style.bottom = isMissionary ? "25vh" : "12vh";
-      }
+      char.addEventListener("click", () => {
+        if (gameOver) return;
+        if (state[id] === "boat") {
+          state[id] = boatSide;
+          onboard = onboard.filter(x => x !== id);
+        } else if (state[id] === boatSide && onboard.length < 2) {
+          state[id] = "boat";
+          onboard.push(id);
+        } else return;
+
+        char.classList.remove("jump");
+        void char.offsetWidth;
+        char.classList.add("jump");
+
+        updatePositions();
+      });
     });
-  }
 
-  function moveBoat() {
-    if (gameOver || onboard.length === 0) return;
+    function updatePositions() {
+      boat.style.left = `${boatPositions[boatSide]}vh`;
 
-    boatSide = boatSide === "left" ? "right" : "left";
-    updatePositions();
+      characters.forEach((char) => {
+        const id = char.id;
+        const isMissionary = id.startsWith("m");
 
-    // Auto-unload
-    setTimeout(() => {
+        if (state[id] === "boat") {
+          const offset = 5 + onboard.indexOf(id) * 10;
+          char.style.left = `${boatPositions[boatSide] + offset}vh`;
+          char.style.bottom = `27vh`;
+        } else if (state[id] === "left") {
+          char.style.left = `${characterIslandPositions.left + (["m1","c1","m2","c2","m3","c3"].indexOf(id) % 3) * 5}vw`;
+          char.style.bottom = isMissionary ? "25vh" : "12vh";
+        } else if (state[id] === "right") {
+          char.style.left = `${characterIslandPositions.right + (["m1","c1","m2","c2","m3","c3"].indexOf(id) % 3) * 5}vw`;
+          char.style.bottom = isMissionary ? "25vh" : "12vh";
+        }
+      });
+    }
+
+    function moveBoat() {
+      if (gameOver || onboard.length === 0) return;
+
+      boatSide = boatSide === "left" ? "right" : "left";
+      updatePositions();
+
+      setTimeout(() => {
+        onboard.forEach(id => {
+          state[id] = boatSide;
+        });
+        onboard = [];
+        updatePositions();
+        setTimeout(checkGameState, 800);
+      }, 1000);
+    }
+
+    function checkGameState() {
+      const sideCount = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
+      const missionariesOnSide = { left: [], right: [] };
+      const cannibalsOnSide = { left: [], right: [] };
+
+      Object.keys(state).forEach(id => {
+        const side = state[id];
+        if (side === "boat") return;
+
+        const el = document.getElementById(id);
+        if (id.startsWith("m")) {
+          sideCount[side].m++;
+          missionariesOnSide[side].push(el);
+        } else if (id.startsWith("c")) {
+          sideCount[side].c++;
+          cannibalsOnSide[side].push(el);
+        }
+      });
+
       onboard.forEach(id => {
-        state[id] = boatSide;
+        const side = boatSide;
+        if (id.startsWith("m")) sideCount[side].m++;
+        else if (id.startsWith("c")) sideCount[side].c++;
+      });
+
+      ["left", "right"].forEach(side => {
+        if (sideCount[side].m > 0 && sideCount[side].c > sideCount[side].m) {
+          const m = missionariesOnSide[side][0];
+          const c = cannibalsOnSide[side][0];
+          if (m && c) {
+            c.style.transition = "left 0.5s ease, bottom 0.5s ease";
+            c.style.left = m.style.left;
+            c.style.bottom = m.style.bottom;
+            setTimeout(() => m.style.opacity = "0", 400);
+          }
+
+          setTimeout(() => {
+            showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
+          }, 1000);
+        }
+      });
+
+      const allRight = characters.every(char => state[char.id] === "right");
+      if (allRight) {
+        gameOver = true;
+        gameOverMessage.textContent = "🎉 Congratulations! You Won!";
+        gameOverScreen.style.display = "flex";
+      }
+    }
+
+    function showGameOver(message) {
+      gameOver = true;
+      attackText.textContent = message;
+      attackText.style.display = "block";
+      setTimeout(() => {
+        attackText.style.display = "none";
+        gameOverMessage.textContent = "💀 Game Over";
+        gameOverScreen.style.display = "flex";
+      }, 1500);
+    }
+
+    function resetGame() {
+      characters.forEach(char => {
+        state[char.id] = "left";
+        char.style.opacity = "1";
       });
       onboard = [];
-      updatePositions();
-      setTimeout(checkGameState, 800);
-    }, 1000);
-  }
-
-  function checkGameState() {
-    const sideCount = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
-    const missionariesOnSide = { left: [], right: [] };
-    const cannibalsOnSide = { left: [], right: [] };
-
-    Object.keys(state).forEach(id => {
-      const side = state[id];
-      if (side === "boat") return;
-
-      if (id.startsWith("m")) {
-        sideCount[side].m++;
-        missionariesOnSide[side].push(document.getElementById(id));
-      } else if (id.startsWith("c")) {
-        sideCount[side].c++;
-        cannibalsOnSide[side].push(document.getElementById(id));
-      }
-    });
-
-    onboard.forEach(id => {
-      const side = boatSide;
-      if (id.startsWith("m")) sideCount[side].m++;
-      else if (id.startsWith("c")) sideCount[side].c++;
-    });
-
-    // Check each side
-    ["left", "right"].forEach(side => {
-      if (sideCount[side].m > 0 && sideCount[side].c > sideCount[side].m) {
-        // Animate attack before game over
-        const m = missionariesOnSide[side][0];
-        const c = cannibalsOnSide[side][0];
-        if (m && c) {
-          c.style.transition = "left 0.5s ease, bottom 0.5s ease";
-          c.style.left = m.style.left;
-          c.style.bottom = m.style.bottom;
-          m.style.opacity = "0";
-        }
-
-        setTimeout(() => {
-          showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
-        }, 1000);
-      }
-    });
-
-    const allRight = characters.every(char => state[char.id] === "right");
-    if (allRight) {
-      gameOver = true;
-      gameOverMessage.textContent = "🎉 Congratulations! You Won!";
-      gameOverScreen.style.display = "flex";
-    }
-  }
-
-  function showGameOver(message) {
-    gameOver = true;
-    attackText.textContent = message;
-    attackText.style.display = "block";
-    setTimeout(() => {
+      boatSide = "left";
+      gameOver = false;
       attackText.style.display = "none";
-      gameOverMessage.textContent = "💀 Game Over";
-      gameOverScreen.style.display = "flex";
-    }, 1500);
-  }
+      gameOverScreen.style.display = "none";
+      gameOverMessage.textContent = "";
+      updatePositions();
+    }
 
-  function resetGame() {
-    characters.forEach(char => {
-      state[char.id] = "left";
-      char.style.opacity = "1";
-    });
-    onboard = [];
-    boatSide = "left";
-    gameOver = false;
-    attackText.style.display = "none";
-    gameOverScreen.style.display = "none";
-    gameOverMessage.textContent = "";
     updatePositions();
-  }
-
-  updatePositions();
   </script>
 </body>
 </html>
