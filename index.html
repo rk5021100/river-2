@@ -47,8 +47,7 @@
       cursor: pointer;
     }
 
-    .missionary { width: 15vh; }
-    .cannibal { width: 15vh; }
+    .missionary, .cannibal { width: 15vh; }
 
     .boat {
       position: absolute;
@@ -169,15 +168,15 @@
     </div>
 
     <!-- Characters -->
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m1" alt="Missionary">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m2" alt="Missionary">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m3" alt="Missionary">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c1" alt="Cannibal">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c2" alt="Cannibal">
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c3" alt="Cannibal">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m1">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m2">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/missionary.png" class="character missionary" id="m3">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c1">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c2">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/cannibal.png" class="character cannibal" id="c3">
 
     <!-- Boat -->
-    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/boat.png" class="boat" id="boat" alt="Boat">
+    <img src="https://raw.githubusercontent.com/rk5021100/assets/main/photos/boat.png" class="boat" id="boat">
 
     <div class="island left"></div>
     <div class="island right"></div>
@@ -196,8 +195,8 @@
     let state = {};
     let gameOver = false;
 
-    const boatPositions = { left: 26, right: 92 };
-    const characterIslandPositions = { left: 1, right: 82 };
+    const boatPositions = { left: 26, right: 82 };
+    const characterIslandPositions = { left: 1, right: 72 };
 
     characters.forEach(char => {
       const id = char.id;
@@ -224,19 +223,20 @@
     function updatePositions() {
       boat.style.left = `${boatPositions[boatSide]}vh`;
 
-      characters.forEach((char) => {
+      characters.forEach(char => {
         const id = char.id;
         const isMissionary = id.startsWith("m");
+        const offset = (["m1", "c1", "m2", "c2", "m3", "c3"].indexOf(id) % 3) * 5;
 
         if (state[id] === "boat") {
-          const offset = 5 + onboard.indexOf(id) * 10;
-          char.style.left = `${boatPositions[boatSide] + offset}vh`;
-          char.style.bottom = `27vh`;
+          const boatOffset = 5 + onboard.indexOf(id) * 10;
+          char.style.left = `${boatPositions[boatSide] + boatOffset}vh`;
+          char.style.bottom = "27vh";
         } else if (state[id] === "left") {
-          char.style.left = `${characterIslandPositions.left + (["m1","c1","m2","c2","m3","c3"].indexOf(id) % 3) * 5}vw`;
+          char.style.left = `${characterIslandPositions.left + offset}vw`;
           char.style.bottom = isMissionary ? "25vh" : "12vh";
         } else if (state[id] === "right") {
-          char.style.left = `${characterIslandPositions.right + (["m1","c1","m2","c2","m3","c3"].indexOf(id) % 3) * 5}vw`;
+          char.style.left = `${characterIslandPositions.right + offset}vw`;
           char.style.bottom = isMissionary ? "25vh" : "12vh";
         }
       });
@@ -249,9 +249,7 @@
       updatePositions();
 
       setTimeout(() => {
-        onboard.forEach(id => {
-          state[id] = boatSide;
-        });
+        onboard.forEach(id => state[id] = boatSide);
         onboard = [];
         updatePositions();
         setTimeout(checkGameState, 800);
@@ -260,43 +258,23 @@
 
     function checkGameState() {
       const sideCount = { left: { m: 0, c: 0 }, right: { m: 0, c: 0 } };
-      const missionariesOnSide = { left: [], right: [] };
-      const cannibalsOnSide = { left: [], right: [] };
-
-      Object.keys(state).forEach(id => {
+      characters.forEach(char => {
+        const id = char.id;
         const side = state[id];
         if (side === "boat") return;
-
-        const el = document.getElementById(id);
-        if (id.startsWith("m")) {
-          sideCount[side].m++;
-          missionariesOnSide[side].push(el);
-        } else if (id.startsWith("c")) {
-          sideCount[side].c++;
-          cannibalsOnSide[side].push(el);
-        }
+        if (id.startsWith("m")) sideCount[side].m++;
+        else sideCount[side].c++;
       });
 
       onboard.forEach(id => {
         const side = boatSide;
         if (id.startsWith("m")) sideCount[side].m++;
-        else if (id.startsWith("c")) sideCount[side].c++;
+        else sideCount[side].c++;
       });
 
       ["left", "right"].forEach(side => {
         if (sideCount[side].m > 0 && sideCount[side].c > sideCount[side].m) {
-          const m = missionariesOnSide[side][0];
-          const c = cannibalsOnSide[side][0];
-          if (m && c) {
-            c.style.transition = "left 0.5s ease, bottom 0.5s ease";
-            c.style.left = m.style.left;
-            c.style.bottom = m.style.bottom;
-            setTimeout(() => m.style.opacity = "0", 400);
-          }
-
-          setTimeout(() => {
-            showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
-          }, 1000);
+          showGameOver(`💀 Cannibals ate the Missionaries on the ${side} side!`);
         }
       });
 
