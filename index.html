@@ -152,6 +152,7 @@
     <div class="button-container">
       <button onclick="moveBoat()">Move</button>
       <button onclick="resetGame()">Reset</button>
+      <button onclick="showRules()">Rules</button>
     </div>
 
     <!-- Characters -->
@@ -175,6 +176,26 @@
   <div id="message" style="font-size: 3em; text-align: center; padding: 20px;"></div>
   <button onclick="resetGame()" style="font-size: 2em; padding: 10px 30px; margin-top: 20px;">Restart</button>
     </div>
+
+    <!-- Rules Overlay -->
+<div id="rulesOverlay" class="overlay">
+  <div style="max-width: 90vw; max-height: 80vh; overflow-y: auto; text-align: left; background: white; border-radius: 20px; padding: 20px; color: black;">
+    <h2 style="text-align: center;">📜 Game Rules</h2>
+    <ul style="line-height: 1.8; font-size: 1em;">
+      <li>🧍‍♂️ <b>People:</b> There are 3 missionaries and 3 cannibals.</li>
+      <li>🚤 <b>Boat:</b> The boat can carry a maximum of 2 people.</li>
+      <li>🌊 <b>Crossing:</b> Only one or two people can be in the boat when crossing the river.</li>
+      <li>⚠️ <b>Danger:</b> If at any time, there are more cannibals than missionaries on either bank, the cannibals will eat the missionaries.</li>
+      <li>🎯 <b>Goal:</b> Safely transport all missionaries and cannibals to the other side of the river.</li>
+      <li>🚫 <b>Constraint:</b> The number of missionaries must always be greater than or equal to the number of cannibals on each side of the river.</li>
+    </ul>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="closeRules()" style="font-size: 2em;">Close</button>
+    </div>
+  </div>
+</div>
+
+    
 
   <script>
     const boat = document.getElementById("boat");
@@ -297,6 +318,14 @@
       document.body.classList.remove("eaten");
       updatePositions();
     }
+
+    function showRules() {
+  document.getElementById("rulesOverlay").style.display = "flex";
+}
+function closeRules() {
+  document.getElementById("rulesOverlay").style.display = "none";
+}
+
 
     updatePositions();
   </script>
